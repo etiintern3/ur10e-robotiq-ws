@@ -19,7 +19,9 @@
     visual_parameters_file="$(find ur_description)/config/ur10e/visual_parameters.yaml"
     ur_type="ur10e"
     use_fake_hardware="true">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <!-- Match Isaac Sim /World → ur10e base placement (translation only;
+         update rpy if the Sim base orientation is non-identity). -->
+    <origin xyz="1.37522 -0.0828 1.02974" rpy="0 0 0"/>
   </xacro:ur_robot>
 
   <!-- Attach gripper to the arm's tool0 flange -->

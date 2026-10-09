@@ -22,7 +22,7 @@ from control_msgs.action import GripperCommand
 # Cube
 CUBE_X = 0.60
 CUBE_Y = 0.00
-CUBE_Z = 0.03
+CUBE_Z = 0.0025
 
 CUBE_SIZE = 0.05
 
@@ -36,7 +36,7 @@ CUBE_SIZE = 0.05
 # to be in collision) to 0.08 for safer finger clearance above the
 # cube's collision geometry.
 PRE_GRASP_HEIGHT = 0.43
-GRASP_HEIGHT = 0.2
+GRASP_HEIGHT = 0.18
 
 # Where to place the cube - EDIT THESE for your desired drop location.
 # Assumes the same table/floor height as the pick location.
@@ -270,6 +270,7 @@ def plan_and_execute(planning_component, logger, label, robot, group_name, pipel
     logger.info(f"Planning ({pipeline}): {label}")
 
     plan_params = PlanRequestParameters(robot)
+    plan_params.planning_time = 2.0
     plan_params.planning_pipeline = pipeline
     if planner_id is not None:
         plan_params.planner_id = planner_id
@@ -409,14 +410,14 @@ def main():
     ):
         gripper_action_node.destroy_node()
         return
-
+    time.sleep(2.0)
     # 3. Descend to grasp height (straight line, Pilz LIN)
     if not move_arm_linear_to_pose(
         arm, logger, CUBE_X, CUBE_Y, GRASP_HEIGHT, "Move to grasp (linear)", robot
     ):
         gripper_action_node.destroy_node()
         return
-
+    time.sleep(2.0)
     # 4. Close gripper (direct action call, bypassing MoveIt planning)
     if not close_gripper_directly(
         gripper_action_node, logger, position=GRIPPER_CLOSE_POSITION, max_effort=GRIPPER_CLOSE_MAX_EFFORT
@@ -431,7 +432,7 @@ def main():
     attach_cube_to_gripper(planning_scene_monitor, logger)
 
     # 5. Lift (free-space, OMPL)
-    if not move_arm_to_pose(
+    if not move_arm_linear_to_pose(
         arm, logger, CUBE_X, CUBE_Y, CUBE_Z + PRE_GRASP_HEIGHT, "Lift cube", robot
     ):
         gripper_action_node.destroy_node()
@@ -462,7 +463,7 @@ def main():
     detach_cube_from_gripper(planning_scene_monitor, logger, "robotiq_85_base_link", PLACE_X, PLACE_Y, PLACE_Z)
 
     # 9. Retreat upward after placing (free-space, OMPL)
-    if not move_arm_to_pose(
+    if not move_arm_linear_to_pose(
         arm, logger, PLACE_X, PLACE_Y, PLACE_Z + PRE_PLACE_HEIGHT, "Retreat after place", robot
     ):
         gripper_action_node.destroy_node()
